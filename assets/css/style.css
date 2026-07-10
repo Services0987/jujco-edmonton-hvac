@@ -7427,6 +7427,16 @@ label {
   .jujco-imgstrip__item { height: 220px; }
 }
 
+/* Trust stats bar */
+.jujco-stats { background: var(--accent); color: #fff; }
+.jujco-stats__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; padding: 48px 0; }
+.jujco-stats__num { font-size: 44px; font-weight: 700; margin: 0; line-height: 1; }
+.jujco-stats__label { margin: 8px 0 0; font-size: 14px; letter-spacing: .6px; text-transform: uppercase; opacity: .92; }
+@media (max-width: 767px) {
+  .jujco-stats__grid { grid-template-columns: repeat(2, 1fr); gap: 30px 20px; padding: 36px 0; }
+  .jujco-stats__num { font-size: 34px; }
+}
+
 /* Bento grid expansion */
 .jujco-bento { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 180px; gap: 14px; }
 .jujco-bento__item { position: relative; overflow: hidden; border-radius: 14px; cursor: pointer; }
