@@ -105,6 +105,9 @@
   display: inline-block;
   opacity: 0;
   will-change: transform, opacity, filter;
+  /* Prevent split chars from bleeding outside their container on wrap */
+  overflow: hidden;
+  line-height: 1.2;
 }
 .anim-line { display: block; }
 .anim-char { display: inline-block; }

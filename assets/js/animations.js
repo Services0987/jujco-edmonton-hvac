@@ -445,11 +445,77 @@
     }
   }
 
+  /* ----------------------------------------------------- site-wide randomiser
+   Called before initReveal so every element already has its final effect, duration
+   and stagger baked in. Picks different effects for adjacent elements to keep the
+   flow exciting rather than repetitive. */
+  function randomiseAllEffects() {
+    if (reduceMotion) return;
+    /* Large pools covering every effect type from your master list */
+    var BLOCK_FX = ['fade-up','fade-down','fade-left','fade-right','slide-up','slide-down',
+      'slide-left','slide-right','scale-in','scale-out','zoom-in','zoom-out','rotate-in',
+      'flip-in','bounce-in','pop-in','elastic-in','blur-in','skew-in','fold-in',
+      'drop-in','rise-up','float-in','expand','compress','jitter','shake','wave','glow'];
+    var SPLIT_FX = ['fade','slide','scale','rotate','flip','blur','glow','bounce'];
+    var LIVE_FX = ['wave','jitter','shake','glow','flip'];
+    var DURATIONS = [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500];
+    var STAGGERS = [12,18,24,30,36,42,50,60,70,80,90,100];
+    
+    // Track effects used in the last 300px so we don't repeat nearby
+    var used = {};
+    function avoidRepeat(sel) {
+      var y = sel.getBoundingClientRect().top;
+      // Clean stale entries
+      Object.keys(used).forEach(function(k){
+        if (used[k] < y-300) delete used[k];
+      });
+      // Pick a unique effect not used nearby
+      var effect = BLOCK_FX[Math.floor(Math.random()*BLOCK_FX.length)];
+      while (used[effect] && used[effect] > y-300) {
+        effect = BLOCK_FX[Math.floor(Math.random()*BLOCK_FX.length)];
+      }
+      used[effect] = y;
+      return effect;
+    }
+    
+    /* ---- 1) All generic data-anim elements ---- */
+    qsa('[data-anim]').forEach(function(el){
+      var effect = avoidRepeat(el);
+      el.setAttribute('data-anim', effect);
+      // Randomise timing/duration unless already set
+      if (!el.hasAttribute('data-anim-duration'))
+        el.setAttribute('data-anim-duration', DURATIONS[Math.floor(Math.random()*DURATIONS.length)]/1000+'s');
+      if (!el.hasAttribute('data-anim-delay'))
+        el.setAttribute('data-anim-delay', (Math.random()*0.6).toFixed(3)+'s');
+    });
+    
+    /* ---- 2) Section headings (already handled in initReveal but we expand the pool) ---- */
+    qsa('.cs_section_heading.cs_style_1 .cs_section_title').forEach(function(el){
+      if (el.hasAttribute('data-anim') || el.hasAttribute('data-split')) return;
+      el.setAttribute('data-anim', avoidRepeat(el));
+      if (!el.hasAttribute('data-anim-duration'))
+        el.setAttribute('data-anim-duration', DURATIONS[Math.floor(Math.random()*DURATIONS.length)]/1000+'s');
+    });
+    
+    /* ---- 3) Split typography elements ---- */
+    qsa('.cs_service_card_title, .cs_card_title, .cs_post_title, .cs_team_title, .cs_project_title, .cs_price_title, .cs_award_title, .cs_feature_title, .cs_iconbox_title, .cs_testimonial_title, .cs_process_title, .cs_faq_question, .cs_accordion_head, .cs_accordian_head, .cs_faq_head, .cs_section_subtitle, .cs_subtitle').forEach(function(el){
+      if (el.hasAttribute('data-split') || el.hasAttribute('data-anim')) return;
+      var effect = SPLIT_FX[Math.floor(Math.random()*SPLIT_FX.length)];
+      el.setAttribute('data-split','chars');
+      el.setAttribute('data-split-effect',effect);
+      el.setAttribute('data-split-duration',DURATIONS[Math.floor(Math.random()*DURATIONS.length)]+'ms');
+      el.setAttribute('data-split-stagger',STAGGERS[Math.floor(Math.random()*STAGGERS.length)]+'ms');
+      el._splitUnits = wrapUnits(el,'chars');
+    });
+  }
+
   /* ----------------------------------------------------- bootstrap */
   function init() {
-    /* 1) Tag the site imagery with varied data-anim effects BEFORE the observer
+    /* 1) Apply wide, per‑element randomness BEFORE the observer grabs them. */
+    randomiseAllEffects();
+    /* 2) Tag the site imagery with varied data-anim effects BEFORE the observer
           is built, so the reveal system picks them up automatically.
-       2) Split text FIRST so the observer (initReveal) and the reduced-motion
+       3) Split text FIRST so the observer (initReveal) and the reduced-motion
           fallback both have el._splitUnits ready before any playSplit() runs. */
     initImageReveals();
     initSplit();
