@@ -35,31 +35,11 @@
                   '.reveal-curtain, .reveal-circle, .reveal-diamond, .reveal-blind, .reveal-window';
 
   function initReveal() {
-    /* Diversify the uniform reveals so the site isn't all fade-up / drop-in.
-       Only the generic ones are remapped; bespoke variants are left alone. */
-    var BLOCK_FX = ['fade-up', 'fade-left', 'fade-right', 'slide-up', 'scale-in',
-      'rise-up', 'zoom-in', 'pop-in', 'bounce-in', 'drop-in', 'blur-in', 'elastic-in',
-      'rotate-in', 'flip-in', 'skew-in', 'fold-in'];
-    var _bi = 0;
-    qsa('[data-anim]').forEach(function (el) {
-      var v = el.getAttribute('data-anim');
-      if (v === 'fade-up' || v === 'drop-in' || v === 'fade-in' || v === 'fade-down') {
-        el.setAttribute('data-anim', BLOCK_FX[_bi % BLOCK_FX.length]); _bi++;
-      }
-    });
-
-    /* Give every section heading its OWN distinct entrance so the site stops
-       feeling like one repeated effect. cs_style_1 titles are NOT handled by
-       jujco-anim2 (it excludes them), so they were previously static. We cycle
-       through a rich set of effects so each section reveals differently. */
-    var TEXT_FX = ['fade-up', 'fade-left', 'fade-right', 'slide-up', 'zoom-in',
-      'rotate-in', 'flip-in', 'blur-in', 'bounce-in', 'elastic-in', 'drop-in',
-      'rise-up', 'scale-in', 'skew-in', 'fold-in', 'pop-in'];
-    var _ti = 0;
-    qsa('.cs_section_heading.cs_style_1 .cs_section_title').forEach(function (el) {
-      if (el.hasAttribute('data-anim') || el.hasAttribute('data-split')) return;
-      el.setAttribute('data-anim', TEXT_FX[_ti % TEXT_FX.length]); _ti++;
-    });
+    /* NOTE: per-element effect + timing variety is now owned entirely by
+       randomiseAllEffects() (called in init() BEFORE this runs), so we must
+       NOT remap data-anim here — doing so would overwrite the randomness and
+       make section titles fall back into a predictable fixed cycle. We only
+       build the observer. */
 
     var els = qsa(revealSel);
     if (!els.length) return;
@@ -122,12 +102,22 @@
     el.textContent = '';
     var units = [];
     if (type === 'chars') {
-      text.split('').forEach(function (ch) {
-        if (ch === ' ') { el.appendChild(document.createTextNode(' ')); return; }
-        var s = document.createElement('span');
-        s.className = 'anim-unit';
-        s.textContent = ch;
-        el.appendChild(s); units.push(s);
+      /* Group each WORD in a nowrap wrapper holding the animated letter
+         spans. Without this, every letter is its own inline-block and the
+         browser may break a word mid-word on narrow screens — letters
+         spill onto the next line instead of the whole word wrapping. */
+      text.split(/(\s+)/).forEach(function (tok) {
+        if (tok === '') return;
+        if (/^\s+$/.test(tok)) { el.appendChild(document.createTextNode(tok)); return; }
+        var word = document.createElement('span');
+        word.className = 'anim-word';
+        tok.split('').forEach(function (ch) {
+          var s = document.createElement('span');
+          s.className = 'anim-unit';
+          s.textContent = ch;
+          word.appendChild(s); units.push(s);
+        });
+        el.appendChild(word);
       });
     } else if (type === 'words') {
       text.split(/(\s+)/).forEach(function (w) {
@@ -305,6 +295,25 @@
     });
   }
 
+  /* ----------------------------------------------------- magnetic buttons
+     Buttons / call-to-action nudge toward the cursor for a premium, tactile
+     feel. Transform is driven inline and reset on leave, so it never fights the
+     reveal system (buttons aren't reveal targets). */
+  function initMagnetic() {
+    if (reduceMotion) return;
+    qsa('.cs_btn, .cs_emergency_btn').forEach(function (el) {
+      var strength = num(el.getAttribute('data-magnetic'), 0.35);
+      el.style.transition = el.style.transition || 'transform 0.2s ease-out';
+      el.addEventListener('mousemove', function (e) {
+        var r = el.getBoundingClientRect();
+        var mx = e.clientX - (r.left + r.width / 2);
+        var my = e.clientY - (r.top + r.height / 2);
+        el.style.transform = 'translate(' + (mx * strength) + 'px,' + (my * strength) + 'px)';
+      });
+      el.addEventListener('mouseleave', function () { el.style.transform = ''; });
+    });
+  }
+
   /* ----------------------------------------------------- spotlight */
   function initSpotlight() {
     if (reduceMotion) return;
@@ -451,12 +460,28 @@
    flow exciting rather than repetitive. */
   function randomiseAllEffects() {
     if (reduceMotion) return;
-    /* Large pools covering every effect type from your master list */
+    /* Large pools covering every effect type from your master list.
+       Weighted toward VISUALLY DISTINCT moves (rotation, 3D flip, blur, skew)
+       so the page never reads as "everything just fades up".
+       NOTE: glow / neon / jitter / shake / wave are DELIBERATELY excluded here —
+       they apply brightness/drop-shadow to the whole element and read as an
+       unwanted highlight on plain text. They live only in the split-text /
+       live pools where a letter-level glow is the intended effect. */
     var BLOCK_FX = ['fade-up','fade-down','fade-left','fade-right','slide-up','slide-down',
       'slide-left','slide-right','scale-in','scale-out','zoom-in','zoom-out','rotate-in',
       'flip-in','bounce-in','pop-in','elastic-in','blur-in','skew-in','fold-in',
-      'drop-in','rise-up','float-in','expand','compress','jitter','shake','wave','glow'];
-    var SPLIT_FX = ['fade','slide','scale','rotate','flip','blur','glow','bounce'];
+      'drop-in','rise-up','float-in','expand','compress',
+      'spin-in','swing-in','jelly-in','zoom-spin','drop-rotate','rise-rotate','blur-zoom',
+      'skew-drop','flip-left','flip-right'];
+    /* On phones, drop any effect that moves content sideways — horizontal
+       slides/flips would push elements off the narrow viewport and cause
+       cutoff / a sideways scrollbar. Vertical + rotational moves stay. */
+    var FX_POOL = MOBILE
+      ? BLOCK_FX.filter(function (f) {
+          return !/^(slide-left|slide-right|fade-left|fade-right|flip-left|flip-right)$/.test(f);
+        })
+      : BLOCK_FX;
+    var SPLIT_FX = ['fade','slide','scale','rotate','flip','blur','bounce'];
     var LIVE_FX = ['wave','jitter','shake','glow','flip'];
     var DURATIONS = [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500];
     var STAGGERS = [12,18,24,30,36,42,50,60,70,80,90,100];
@@ -470,9 +495,9 @@
         if (used[k] < y-300) delete used[k];
       });
       // Pick a unique effect not used nearby
-      var effect = BLOCK_FX[Math.floor(Math.random()*BLOCK_FX.length)];
+      var effect = FX_POOL[Math.floor(Math.random()*FX_POOL.length)];
       while (used[effect] && used[effect] > y-300) {
-        effect = BLOCK_FX[Math.floor(Math.random()*BLOCK_FX.length)];
+        effect = FX_POOL[Math.floor(Math.random()*FX_POOL.length)];
       }
       used[effect] = y;
       return effect;
@@ -507,6 +532,16 @@
       el.setAttribute('data-split-stagger',STAGGERS[Math.floor(Math.random()*STAGGERS.length)]+'ms');
       el._splitUnits = wrapUnits(el,'chars');
     });
+
+    /* ---- 4) Premium 3D hover-tilt on cards. Uses data-tilt (hover-only,
+       never hides content) so the card's OWN inner text/image reveals keep
+       playing — this avoids the double-reveal bug where a hiding [data-anim]
+       on the whole card swallowed the text animation. ---- */
+    qsa('.cs_service_card, .cs_post, .cs_team, .cs_project, .cs_price, .cs_award, .cs_feature, .cs_iconbox, .cs_testimonial, .cs_process, .cs_card').forEach(function(el){
+      if (el.hasAttribute('data-tilt')) return;
+      el.setAttribute('data-tilt', '');
+      el.setAttribute('data-tilt-max', '10');
+    });
   }
 
   /* ----------------------------------------------------- bootstrap */
@@ -523,6 +558,7 @@
     initType();
     initCounters();
     initTilt();
+    initMagnetic();
     initSpotlight();
     initMarquee();
     initParallax();

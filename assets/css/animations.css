@@ -98,6 +98,30 @@
 .js [data-anim="expand"]     { transform: scale(0.85); }
 .js [data-anim="compress"]   { transform: scale(1.1); }
 
+/* ---- Dramatic, visually-DISTINCT entrances (added for real variety) -------- */
+.js [data-anim="spin-in"]     { transform: rotate(380deg) scale(0.2); }
+.js [data-anim="zoom-spin"]   { transform: rotate(180deg) scale(0.2); }
+.js [data-anim="swing-in"]    { transform: rotate(-15deg) translateY(50px) scale(0.9); transform-origin: top left; }
+.js [data-anim="jelly-in"]    { transform: scale(1.28); }
+.js [data-anim="drop-rotate"] { transform: translateY(-90px) rotate(22deg); }
+.js [data-anim="rise-rotate"] { transform: translateY(60px) rotate(-14deg); }
+.js [data-anim="blur-zoom"]   { filter: blur(16px); transform: scale(1.35); }
+.js [data-anim="skew-drop"]   { transform: skewY(12deg) translateY(40px); }
+.js [data-anim="flip-left"]   { transform: perspective(900px) rotateY(90deg); transform-origin: left center; }
+.js [data-anim="flip-right"]  { transform: perspective(900px) rotateY(-90deg); transform-origin: right center; }
+.js [data-anim="neon-in"]     { filter: brightness(2.2) drop-shadow(0 0 0 var(--glow-color)); transform: translateY(20px); }
+.js [data-anim="jitter"]      { transform: translateX(-6px); }
+.js [data-anim="shake"]       { transform: translateX(6px) rotate(2deg); }
+.js [data-anim="wave"]        { transform: translateY(26px) rotate(-4deg); }
+.js [data-anim="glow"]        { filter: brightness(1.6) drop-shadow(0 0 8px var(--glow-color)); transform: translateY(14px); }
+
+/* Cards get a touch of 3D depth so the wrapper itself feels alive on hover */
+.js [data-anim].cs_service_card,
+.js [data-anim].cs_post,
+.js [data-anim].cs_team,
+.js [data-anim].cs_project,
+.js [data-anim].cs_card { transform-style: preserve-3d; }
+
 /* =============================================================================
    2) SPLIT TYPOGRAPHY  (letters / words / lines)
    ========================================================================== */
@@ -105,12 +129,13 @@
   display: inline-block;
   opacity: 0;
   will-change: transform, opacity, filter;
-  /* Prevent split chars from bleeding outside their container on wrap */
-  overflow: hidden;
   line-height: 1.2;
 }
+/* The word wrapper keeps a word's letters together so the browser wraps at
+   spaces, never mid-word (fixes letters spilling onto the next line on phones). */
+.anim-word { display: inline-block; white-space: nowrap; }
 .anim-line { display: block; }
-.anim-char { display: inline-block; }
+.anim-char { display: inline-block; white-space: nowrap; }
 
 /* unit entrance variants (applied by JS as animation-name) */
 @keyframes unitFade   { to { opacity: 1; } }
@@ -121,6 +146,13 @@
 @keyframes unitBlur   { from { filter: blur(10px); transform: translateY(8px); } to { filter: blur(0); transform: none; opacity: 1; } }
 @keyframes unitGlow   { from { opacity: 0; text-shadow: 0 0 0 var(--glow-color); } to { opacity: 1; text-shadow: 0 0 18px var(--glow-color); } }
 @keyframes unitBounce { 0% { opacity: 0; transform: translateY(1.1em) scale(0.6); } 60% { opacity: 1; transform: translateY(-0.25em) scale(1.05); } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+
+/* --------------------------------------------------- extra premium keyframes */
+@keyframes charScramble { 0% { opacity: 0; transform: translateY(-1em) rotate(-5deg); } 100% { opacity: 1; transform: translateY(0) rotate(0); } }
+@keyframes wordMorph { 0% { opacity: 0; transform: scale(0.7) rotateX(-20deg); } 100% { opacity: 1; transform: scale(1) rotateX(0); } }
+@keyframes glassLift { 0% { opacity: 0; transform: translateY(40px) perspective(1000px) rotateX(12deg); } 100% { opacity: 1; transform: translateY(0) perspective(1000px) rotateX(0); } }
+@keyframes floatDrift { 0%,100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-8px) rotate(2deg); } 75% { transform: translateY(8px) rotate(-2deg); } }
+@keyframes shimmerSweep { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 /* live (looping) character effects triggered via data-anim-live */
 @keyframes charWave  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.32em); } }
@@ -514,20 +546,59 @@
 }
 @keyframes jujcoProgressHue { to { background-position: 300% 0; } }
 
-/* Distinct EXIT state so the in/out motion isn't just the same move reversed.
-   Applied when an element scrolls out of view (re-trigger system). */
+/* Distinct EXIT states — each effect leaves view with its OWN motion, never a
+   uniform copy of the entrance. This is what makes scroll up/down feel alive
+   instead of "the same thing in reverse". */
 .js [data-anim].out {
   opacity: 0 !important;
-  transform: translateY(26px) scale(.93) !important;
-  transition: opacity .5s ease, transform .5s var(--anim-ease);
+  transition: opacity .55s ease, transform .55s var(--anim-ease), filter .55s ease;
 }
+.js [data-anim="fade-up"].out,
+.js [data-anim="float-in"].out,
+.js [data-anim="rise-up"].out,
+.js [data-anim="bounce-in"].out,
+.js [data-anim="drop-in"].out    { transform: translateY(-40px) scale(.94) !important; }
+.js [data-anim="fade-down"].out  { transform: translateY(40px) scale(.94) !important; }
+.js [data-anim="fade-left"].out  { transform: translateX(60px) !important; }
+.js [data-anim="fade-right"].out { transform: translateX(-60px) !important; }
+.js [data-anim="slide-up"].out,
+.js [data-anim="slide-down"].out { transform: translateY(40%) !important; }
+.js [data-anim="slide-left"].out { transform: translateX(40%) !important; }
+.js [data-anim="slide-right"].out{ transform: translateX(-40%) !important; }
+.js [data-anim="scale-in"].out,
+.js [data-anim="pop-in"].out,
+.js [data-anim="expand"].out     { transform: scale(1.18) !important; }
+.js [data-anim="scale-out"].out,
+.js [data-anim="compress"].out   { transform: scale(.78) !important; }
+.js [data-anim="zoom-in"].out,
+.js [data-anim="zoom-out"].out,
+.js [data-anim="blur-zoom"].out  { transform: scale(.6) !important; filter: blur(10px) !important; }
+.js [data-anim="rotate-in"].out  { transform: rotate(18deg) scale(.9) !important; }
+.js [data-anim="flip-in"].out,
+.js [data-anim="flip-left"].out,
+.js [data-anim="flip-right"].out { transform: perspective(800px) rotateX(-75deg) !important; transform-origin: bottom; }
+.js [data-anim="blur-in"].out    { filter: blur(12px) !important; transform: translateY(18px) !important; }
+.js [data-anim="skew-in"].out,
+.js [data-anim="skew-drop"].out  { transform: skewX(-16deg) translateY(16px) !important; }
+.js [data-anim="fold-in"].out    { transform: perspective(900px) rotateX(78deg) !important; transform-origin: bottom; }
+.js [data-anim="spin-in"].out,
+.js [data-anim="zoom-spin"].out  { transform: rotate(-200deg) scale(.7) !important; }
+.js [data-anim="swing-in"].out   { transform: rotate(14deg) translateY(40px) !important; transform-origin: top right; }
+.js [data-anim="jelly-in"].out   { transform: scale(.7) !important; }
+.js [data-anim="drop-rotate"].out{ transform: translateY(70px) rotate(-20deg) !important; }
+.js [data-anim="rise-rotate"].out{ transform: translateY(-60px) rotate(16deg) !important; }
+.js [data-anim="neon-in"].out,
+.js [data-anim="glow"].out       { filter: brightness(1) drop-shadow(0 0 0 transparent) !important; transform: translateY(-16px) !important; }
+.js [data-anim="jitter"].out     { transform: translateX(8px) !important; }
+.js [data-anim="shake"].out      { transform: translateX(-8px) rotate(-2deg) !important; }
+.js [data-anim="wave"].out       { transform: translateY(-24px) rotate(4deg) !important; }
 
 /* Split text also gets its own gentle exit so headings re-animate (letters
    re-drop in) every time they re-enter the viewport — different from the entry
    choreography, which keeps the page feeling alive on scroll up/down. */
 .js [data-split].out .anim-unit {
   opacity: 0 !important;
-  transform: translateY(12px) !important;
+  transform: translateY(-12px) !important;
   transition: opacity .4s ease, transform .4s var(--anim-ease);
 }
 /* Continuous (looping) text — e.g. glowing stat counters — must stay visible
@@ -539,10 +610,217 @@
 @media (max-width: 767px) {
   :root { --anim-duration: 0.6s; --anim-delay: 0s; }
   .jujco-scroll-progress { height: 3px; }
+
+  /* Safety net: never allow a sideways scrollbar from transforms. `clip`
+     (not `hidden`) avoids breaking position:sticky / fixed headers. */
+  body { overflow-x: clip; }
+
+  /* Neutralise any horizontal motion so nothing slides off the narrow
+     viewport. Sideways effects become gentle vertical rises instead. */
+  .js [data-anim="slide-left"],
+  .js [data-anim="slide-right"]  { transform: translateY(36px); }
+  .js [data-anim="fade-left"],
+  .js [data-anim="fade-right"]  { transform: translateY(28px); }
+  .js [data-anim="flip-left"],
+  .js [data-anim="flip-right"]  { transform: perspective(800px) rotateX(70deg); transform-origin: top; }
+
+  /* Softer vertical travel + smaller scale jumps on small screens */
+  .js [data-anim="slide-up"],
+  .js [data-anim="slide-down"]  { transform: translateY(48px); }
+  .js [data-anim="scale-in"],
+  .js [data-anim="zoom-in"]     { transform: scale(0.82); }
+  .js [data-anim="pop-in"],
+  .js [data-anim="elastic-in"]  { transform: scale(0.7); }
+
+  /* Match the exit states so they also stay on-screen */
+  .js [data-anim="fade-left"].out,
+  .js [data-anim="fade-right"].out { transform: translateY(-28px) !important; }
+  .js [data-anim="slide-left"].out,
+  .js [data-anim="slide-right"].out { transform: translateY(-30%) !important; }
+  .js [data-anim="flip-left"].out,
+  .js [data-anim="flip-right"].out { transform: perspective(800px) rotateX(-70deg) !important; transform-origin: bottom; }
+
+  /* Magnetic pull is pointless on touch — keep buttons steady */
+  .cs_btn, .cs_emergency_btn { transform: none !important; }
 }
 
 /* =============================================================================
-   13) ACCESSIBILITY — reduced motion
+   13) PREMIUM EFFECTS (glass, 3D tilt, extra keyframes)
+   ========================================================================== */
+.glassmorphism {
+  position: relative;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+.glassmorphism::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--anim-ease);
+}
+.glassmorphism:hover::before { opacity: 1; }
+
+/* 3D tilt container – apply to inner wrapper of cards/tiles */
+.tilt-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+.tilt-3d > * {
+  transition: transform 0.15s var(--anim-ease);
+  will-change: transform;
+}
+.tilt-3d:hover > *,
+.tilt-3d:focus-within > * {
+  transform: rotateY(8deg) rotateX(-6deg) translateZ(12px);
+}
+
+/* Extra premium keyframes */
+@keyframes charScramble { 0% { opacity: 0; transform: translateY(-1em) rotate(-5deg); } 100% { opacity: 1; transform: translateY(0) rotate(0); } }
+@keyframes wordMorph { 0% { opacity: 0; transform: scale(0.7) rotateX(-20deg); } 100% { opacity: 1; transform: scale(1) rotateX(0); } }
+@keyframes glassLift { 0% { opacity: 0; transform: translateY(40px) perspective(1000px) rotateX(12deg); } 100% { opacity: 1; transform: translateY(0) perspective(1000px) rotateX(0); } }
+@keyframes floatDrift { 0%,100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-8px) rotate(2deg); } 75% { transform: translateY(8px) rotate(-2deg); } }
+@keyframes shimmerSweep { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* =============================================================================
+   14) MODERN PREMIUM EFFECTS  (target existing site classes — no markup edits)
+   ========================================================================== */
+/* Smooth, modern scrolling */
+html { scroll-behavior: smooth; }
+
+/* Gradient-shift text for the hero "badge". ONLY the gradient flows — no
+   transform — because the hero is a slick slider and a transform on this child
+   fights the slider's transform on the slide, causing a hover stutter. */
+.cs_hero_mini_title {
+  background: linear-gradient(90deg, #ff6a00, #ffb000, #19c3a6, #4d8bff, #ff6a00);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: jujcoProgressHue 8s linear infinite;
+  will-change: background-position;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ---- Buttons: shine sweep + glow on hover (movement handled by magnetic JS) */
+.cs_btn.cs_style_1 { position: relative; overflow: hidden; will-change: transform; }
+.cs_emergency_btn { overflow: hidden; will-change: transform; }
+.cs_btn.cs_style_1::after {
+  content: ""; position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-20deg); transition: left .6s ease; pointer-events: none;
+}
+.cs_btn.cs_style_1:hover::after { left: 130%; }
+.cs_btn.cs_style_1:hover {
+  box-shadow: 0 12px 32px rgba(255, 106, 0, 0.35);
+}
+
+/* ---- Emergency call button: glass + pulsing glow icon (draws the eye) */
+.cs_emergency_btn {
+  background: rgba(255, 106, 0, 0.88);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+}
+.cs_emergency_icon { animation: pulseGlow 2.2s ease-in-out infinite; }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55); }
+  50%      { box-shadow: 0 0 0 14px rgba(255, 255, 255, 0); }
+}
+
+/* ---- Team / image cards: hover overlay reveal + subtle lift (wrapper only,
+   so it never clashes with the per-image reveal transform). */
+.cs_team_member_thumb { position: relative; overflow: hidden; }
+.cs_team_member_thumb::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,106,0,0.35), rgba(77,139,255,0.25));
+  opacity: 0; transition: opacity .45s var(--anim-ease);
+}
+.cs_team_member_thumb:hover::after { opacity: 1; }
+.cs_team_member_thumb:hover { transform: translateY(-6px) scale(1.03); transition: transform .4s var(--anim-ease); }
+
+/* Opt-in animated gradient text utility */
+.cs_gradient_text {
+  background: linear-gradient(90deg, #ff6a00, #ffb000, #19c3a6, #4d8bff, #ff6a00);
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: jujcoProgressHue 8s linear infinite;
+  will-change: background-position;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ---- Always-on service marquee (perpetual, pausable on hover) ---- */
+.jujco-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  padding: 16px 0;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.5);
+}
+.jujco-marquee__track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: jujcoMarquee 26s linear infinite;
+  will-change: transform;
+}
+.jujco-marquee:hover .jujco-marquee__track { animation-play-state: paused; }
+.jujco-marquee__item {
+  display: inline-block;
+  padding: 0 26px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  color: var(--accent-color, #ff6a00);
+  background: linear-gradient(90deg, #ff6a00, #ffb000, #19c3a6, #4d8bff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: jujcoProgressHue 8s linear infinite;
+}
+.jujco-marquee__item::after {
+  content: "\2022";
+  margin-left: 26px;
+  -webkit-text-fill-color: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.18);
+}
+@keyframes jujcoMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---- Subtle always-on ambient aurora behind the whole site (safe: fixed,
+   behind content, never covers it, reduced-motion disables it) ---- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 38% at 18% 22%, rgba(255,106,0,0.10), transparent 60%),
+    radial-gradient(34% 34% at 82% 28%, rgba(77,139,255,0.10), transparent 60%),
+    radial-gradient(40% 40% at 50% 82%, rgba(25,195,166,0.10), transparent 60%);
+  background-size: 200% 200%;
+  animation: jujcoAurora 20s ease-in-out infinite alternate;
+  will-change: background-position;
+}
+@keyframes jujcoAurora { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+
+/* =============================================================================
+   15) ACCESSIBILITY — reduced motion
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   /* Honour the preference: no transforms / large motion / loops,
