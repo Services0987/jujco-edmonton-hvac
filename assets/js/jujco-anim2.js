@@ -28,16 +28,26 @@
     nodes.forEach(function (node) {
       if (node.nodeType === 3) {
         var text = node.nodeValue;
-        for (var i = 0; i < text.length; i++) {
-          var ch = text[i];
-          if (ch === ' ') frag.appendChild(document.createTextNode(' '));
-          else {
-            var s = document.createElement('span');
-            s.className = 'jujco-char';
-            s.textContent = ch;
-            frag.appendChild(s);
+        /* Keep each WORD atomic so letters can never wrap mid-word.
+           Every word is wrapped in a .jujco-word (white-space:nowrap); the
+           per-character .jujco-char spans inside still drive the kinetic
+           reveal. Line breaks therefore happen ONLY between words. */
+        text.split(/(\s+)/).forEach(function (part) {
+          if (part === '') return;
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part));
+          } else {
+            var word = document.createElement('span');
+            word.className = 'jujco-word';
+            for (var i = 0; i < part.length; i++) {
+              var s = document.createElement('span');
+              s.className = 'jujco-char';
+              s.textContent = part[i];
+              word.appendChild(s);
+            }
+            frag.appendChild(word);
           }
-        }
+        });
       } else if (node.nodeName === 'BR') frag.appendChild(document.createElement('br'));
       else frag.appendChild(node);
     });
@@ -77,10 +87,13 @@
 
   function init() {
     var hero = visible(qsa('.cs_hero_title'));
-    var allSection = visible(qsa('.cs_section_title'));
-    var splitSection = allSection.filter(function (t) {
+    /* Exclude cs_style_1 section titles — animations.js now owns those
+       (distinct per-section entrances) and the scroll-skew would otherwise
+       fight the data-anim reveal on the same element. */
+    var allSection = visible(qsa('.cs_section_title')).filter(function (t) {
       return !t.closest('.cs_section_heading.cs_style_1');
     });
+    var splitSection = allSection;
     var page = visible(qsa('.cs_page_title'));
     var cta = visible(qsa('.cs_cta_title'));
 
@@ -92,7 +105,7 @@
               io.unobserve(en.target);
             }
           });
-        }, { threshold: 0.25 })
+        }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' })
       : null;
 
     function observe(el, revealFn) {
@@ -102,14 +115,14 @@
     }
 
     /* ---------- VARIANT A : HERO — 3D split reveal, no crumble ---------- */
-    hero.forEach(function (t) {
+    hero.forEach(function (t, hi) {
       var chars = splitToChars(t);
       chars.forEach(function (c, i) {
         c.style.display = 'inline-block';
         c.style.transition = 'transform .8s cubic-bezier(.2,.7,.2,1), opacity .8s ease';
         c.style.transitionDelay = (i * 35) + 'ms';
         c.style.transformOrigin = '50% 100%';
-        c.style.transform = kineticEntry(i);
+        c.style.transform = kineticEntry(i + hi * 3);
         c.style.opacity = '0';
       });
       observe(t, function () {
@@ -128,15 +141,23 @@
       });
     });
 
-    /* ---------- VARIANT B : SECTION — blur-in split reveal ---------- */
-    splitSection.forEach(function (t) {
+    /* ---------- VARIANT B : SECTION — split reveal with per-section variety ---------- */
+    var SECTION_FROM = [
+      'translateY(44px) rotate(6deg)',
+      'translateY(-46px) rotate(-6deg)',
+      'translateX(-50px) rotateY(-40deg)',
+      'translateX(50px) rotateY(40deg)',
+      'scale(.3) rotate(-12deg)'
+    ];
+    splitSection.forEach(function (t, si) {
       var chars = splitToChars(t);
+      var fromT = SECTION_FROM[si % SECTION_FROM.length];
       chars.forEach(function (c, i) {
         c.style.display = 'inline-block';
         c.style.transition = 'transform .7s cubic-bezier(.2,.7,.2,1), opacity .7s ease, filter .7s ease';
         c.style.transitionDelay = (i * 22) + 'ms';
         c.style.transformOrigin = '0% 100%';
-        c.style.transform = kineticEntry(i);
+        c.style.transform = fromT;
         c.style.filter = 'blur(8px)';
         c.style.opacity = '0';
       });

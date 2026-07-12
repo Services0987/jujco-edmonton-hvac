@@ -1651,6 +1651,18 @@ textarea {
     font-size: 50px;
   }
 }
+@media (max-width: 575px) {
+  .cs_page_heading .cs_fs_64 {
+    font-size: 34px;
+    line-height: 1.2;
+  }
+}
+@media (max-width: 400px) {
+  .cs_page_heading .cs_fs_64 {
+    font-size: 28px;
+    line-height: 1.25;
+  }
+}
 
 .cs_fs_74 {
   font-size: 74px;
@@ -6642,6 +6654,7 @@ label {
   position: absolute;
   top: -40px;
   width: 486px;
+  max-width: 100%;
   left: 50%;
   margin-left: 6px;
   -webkit-transform: translateX(-50%);
@@ -6672,19 +6685,26 @@ label {
 .cs_service_card.cs_style_1 .cs_service_card_in {
   position: relative;
   z-index: 2;
-  height: 384px;
+  min-height: 384px;
   max-width: 300px;
   margin-left: auto;
   margin-right: auto;
 }
+.cs_service_card.cs_style_1 .cs_service_card_subtitle {
+  max-width: 100%;
+  margin-top: 6px;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 @media (max-width: 1400px) {
   .cs_service_card.cs_style_1 .cs_service_card_in {
-    height: 374px;
+    min-height: 374px;
   }
 }
 @media (max-width: 1199px) {
   .cs_service_card.cs_style_1 .cs_service_card_in {
-    height: 335px;
+    min-height: 335px;
   }
 }
 .cs_service_card.cs_style_1 .cs_service_card_icon {
@@ -7320,6 +7340,7 @@ label {
 }
 .jujco-word {
   display: inline-block;
+  white-space: nowrap;
   will-change: transform, opacity;
 }
 /* Give titles a 3D stage so the rotateX reveal / shatter reads as true 3D */
