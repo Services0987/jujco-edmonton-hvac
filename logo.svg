@@ -1,0 +1,11 @@
+
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background/icon circle -->
+  <circle cx="30" cy="30" r="28" fill="#FF5500"/>
+  
+  <!-- Heating/cooling icon -->
+  <path d="M30 10 L30 50 M10 30 L50 30 M16 16 L44 44 M44 16 L16 44" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- JUJCO text -->
+  <text x="70" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#010F34">JUJCO</text>
+</svg>

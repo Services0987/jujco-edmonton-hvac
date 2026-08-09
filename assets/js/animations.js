@@ -321,7 +321,7 @@
       el.style.position = el.style.position || 'relative';
       var glow = document.createElement('span');
       glow.style.cssText = 'position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;' +
-        'background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), rgba(255,85,0,0.18), transparent 60%);';
+        'background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), rgba(239,27,29,0.18), transparent 60%);';
       el.appendChild(glow);
       el.addEventListener('mousemove', function (e) {
         var r = el.getBoundingClientRect();
@@ -440,7 +440,7 @@
     if (!host || reduceMotion) return;
     var dot = document.createElement('div');
     dot.style.cssText = 'position:fixed;width:18px;height:18px;border-radius:50%;pointer-events:none;' +
-      'background:rgba(255,85,0,0.35);transform:translate(-50%,-50%);z-index:9999;mix-blend-mode:screen;transition:opacity .3s;';
+      'background:rgba(239,27,29,0.35);transform:translate(-50%,-50%);z-index:9999;mix-blend-mode:screen;transition:opacity .3s;';
     document.body.appendChild(dot);
     var x = 0, y = 0, cx = 0, cy = 0, raf = null;
     window.addEventListener('mousemove', function (e) { x = e.clientX; y = e.clientY; if (!raf) raf = requestAnimationFrame(loop); }, { passive: true });

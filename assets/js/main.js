@@ -5,37 +5,19 @@
   |--------------------------------------------------------------------------
   | Template Name: Arkdin
   | Author: JUJCO Heating & Cooling
-  | Version: 1.0.0
+  | Version: 1.0.1
   |--------------------------------------------------------------------------
-  |--------------------------------------------------------------------------
-  | TABLE OF CONTENTS:
-  |--------------------------------------------------------------------------
-  |
-  | 1. Preloader
-  | 2. Mobile Menu
-  | 3. Sticky Header
-  | 4. Dynamic Background
-  | 5. Slick Slider
-  | 6. Modal Video
-  | 7. Accordian
-  | 8. Tabs
-  | 9. Progress Bar
-  | 10. Review
-  |
   */
 
-  /*--------------------------------------------------------------
-    Scripts initialization
-  --------------------------------------------------------------*/
   $.exists = function (selector) {
     return $(selector).length > 0;
   };
 
-  $(window).on('load', function () {
-    preloader();
-  });
-
   $(function () {
+    // 1. Initialize preloader immediately on DOM ready (better than window load)
+    initVideoPreloader();
+
+    // 2. Initialize other scripts
     mainNav();
     stickyHeader();
     dynamicBackground();
@@ -45,6 +27,7 @@
     tabs();
     progressBar();
     review();
+
     if ($.exists('.wow')) {
       new WOW().init();
     }
@@ -54,11 +37,91 @@
   });
 
   /*--------------------------------------------------------------
-    1. Preloader
+    1. Preloader (Advanced Video Support)
   --------------------------------------------------------------*/
-  function preloader() {
-    $('.cs_preloader').fadeOut();
-    $('cs_preloader_in').delay(150).fadeOut('slow');
+  function initVideoPreloader() {
+    var $preloader = $('.cs_preloader');
+    if (!$preloader.length) return;
+
+    var $video = $preloader.find('video');
+
+    // Lock body scroll so the main interface doesn't shift behind the preloader
+    $('body').css('overflow', 'hidden');
+
+    if ($video.length) {
+      var video = $video[0];
+
+      // CRITICAL: Enforce attributes to prevent browser autoplay blocking
+      video.muted = true;         // Required for autoplay in Chrome/Safari
+      video.playsInline = true;   // Required for iOS Safari
+      video.controls = false;
+
+      var startPlayback = function () {
+        var playPromise = video.play();
+        var hasEnded = false;
+
+        var triggerHide = function () {
+          if (!hasEnded) {
+            hasEnded = true;
+            hidePreloader();
+          }
+        };
+
+        if (playPromise !== undefined) {
+          playPromise.then(function () {
+            // Video started playing successfully
+            video.addEventListener('ended', triggerHide);
+
+            // Fallback check: Triggers fade out when video reaches the end
+            // (Useful if the 'ended' event fails to fire on certain browsers)
+            video.addEventListener('timeupdate', function () {
+              if (video.duration && video.currentTime >= (video.duration - 0.2)) {
+                triggerHide();
+              }
+            });
+          }).catch(function (error) {
+            // Autoplay was prevented by strict browser settings. 
+            // Fallback: Wait 500ms then hide preloader so the site isn't permanently stuck.
+            setTimeout(triggerHide, 500);
+          });
+        } else {
+          video.addEventListener('ended', triggerHide);
+        }
+      };
+
+      // Start playback ONLY when the browser has buffered enough data for smooth playback
+      if (video.readyState >= 3) {
+        startPlayback();
+      } else {
+        video.addEventListener('canplay', startPlayback);
+        // Safety timeout: If buffering fails or video is too large, start anyway after 3 seconds
+        setTimeout(function () {
+          if (video.paused) {
+            startPlayback();
+          }
+        }, 3000);
+      }
+    } else {
+      // Fallback for non-video preloaders
+      $(window).on('load', hidePreloader);
+    }
+  }
+
+  function hidePreloader() {
+    var $preloaderIn = $('.cs_preloader_in');
+    var $preloader = $('.cs_preloader');
+
+    if ($preloaderIn.length) {
+      $preloaderIn.delay(150).fadeOut('slow', function () {
+        $preloader.fadeOut('slow', function () {
+          $('body').css('overflow', ''); // Restore scrolling
+        });
+      });
+    } else {
+      $preloader.fadeOut('slow', function () {
+        $('body').css('overflow', ''); // Restore scrolling
+      });
+    }
   }
 
   /*--------------------------------------------------------------
@@ -137,32 +200,23 @@
   function slickInit() {
     if ($.exists('.cs_slider')) {
       $('.cs_slider').each(function () {
-        // Slick Variable
         var $ts = $(this).find('.cs_slider_container');
         var $slickActive = $(this).find('.cs_slider_wrapper');
-        // Auto Play
         var autoPlayVar = parseInt($ts.attr('data-autoplay'), 10);
-        // Auto Play Time Out
         var autoplaySpdVar = 3000;
         if (autoPlayVar > 1) {
           autoplaySpdVar = autoPlayVar;
           autoPlayVar = 1;
         }
-        // Slide Change Speed
         var speedVar = parseInt($ts.attr('data-speed'), 10);
-        // Slider Loop
         var loopVar = Boolean(parseInt($ts.attr('data-loop'), 10));
-        // Slider Center
         var centerVar = Boolean(parseInt($ts.attr('data-center'), 10));
-        // Variable Width
         var variableWidthVar = Boolean(
           parseInt($ts.attr('data-variable-width'), 10),
         );
-        // Pagination
         var paginaiton = $(this)
           .find('.cs_pagination')
           .hasClass('cs_pagination');
-        // Slide Per View
         var slidesPerView = $ts.attr('data-slides-per-view');
         if (slidesPerView == 1) {
           slidesPerView = 1;
@@ -174,11 +228,9 @@
           var smPoint = parseInt($ts.attr('data-sm-slides'), 10);
           var xsPoing = parseInt($ts.attr('data-xs-slides'), 10);
         }
-        // Fade Slider
         var fadeVar = parseInt($($ts).attr('data-fade-slide'));
         fadeVar === 1 ? (fadeVar = true) : (fadeVar = false);
 
-        // Slick Active Code
         $slickActive.slick({
           autoplay: autoPlayVar,
           dots: paginaiton,
@@ -195,35 +247,14 @@
           variableWidth: variableWidthVar,
           swipeToSlide: true,
           responsive: [
-            {
-              breakpoint: 1200,
-              settings: {
-                slidesToShow: lgPoint,
-              },
-            },
-            {
-              breakpoint: 992,
-              settings: {
-                slidesToShow: mdPoint,
-              },
-            },
-            {
-              breakpoint: 768,
-              settings: {
-                slidesToShow: smPoint,
-              },
-            },
-            {
-              breakpoint: 576,
-              settings: {
-                slidesToShow: xsPoing,
-              },
-            },
+            { breakpoint: 1200, settings: { slidesToShow: lgPoint } },
+            { breakpoint: 992, settings: { slidesToShow: mdPoint } },
+            { breakpoint: 768, settings: { slidesToShow: smPoint } },
+            { breakpoint: 576, settings: { slidesToShow: xsPoing } },
           ],
         });
       });
     }
-    /* Service Product */
     $('.cs_service_product_thumb').slick({
       slidesToShow: 1,
       slidesToScroll: 1,
@@ -240,30 +271,10 @@
       prevArrow: $('.cs_service_product_nav_left_arrow'),
       nextArrow: $('.cs_service_product_nav_right_arrow'),
       responsive: [
-        {
-          breakpoint: 1400,
-          settings: {
-            slidesToShow: 4,
-          },
-        },
-        {
-          breakpoint: 1199,
-          settings: {
-            slidesToShow: 3,
-          },
-        },
-        {
-          breakpoint: 991,
-          settings: {
-            slidesToShow: 2,
-          },
-        },
-        {
-          breakpoint: 575,
-          settings: {
-            slidesToShow: 1,
-          },
-        },
+        { breakpoint: 1400, settings: { slidesToShow: 4 } },
+        { breakpoint: 1199, settings: { slidesToShow: 3 } },
+        { breakpoint: 991, settings: { slidesToShow: 2 } },
+        { breakpoint: 575, settings: { slidesToShow: 1 } },
       ],
     });
   }
@@ -292,9 +303,7 @@
       $(document).on('click', '.cs_video_open', function (e) {
         e.preventDefault();
         var video = $(this).attr('href');
-
         $('.cs_video_popup-container iframe').attr('src', `${video}`);
-
         $('.cs_video_popup').addClass('active');
       });
       $('.cs_video_popup-close, .cs_video_popup-layer').on(
@@ -328,7 +337,6 @@
         .siblings()
         .find('.cs_accordian_body')
         .slideUp(250);
-      /* Accordian Active Class */
       $(this).parents('.cs_accordian').addClass('active');
       $(this).parent('.cs_accordian').siblings().removeClass('active');
     });
@@ -389,7 +397,6 @@
         });
       }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     }
-    /* 5D - pointer tracking 3D tilt */
     document.querySelectorAll(tilt).forEach(function (el) {
       el.addEventListener('mousemove', function (e) {
         var r = el.getBoundingClientRect();
@@ -401,7 +408,6 @@
         el.style.transform = '';
       });
     });
-    /* 4D - scroll reveal */
     document.querySelectorAll(reveal).forEach(function (el, i) {
       el.classList.add('jujco-reveal');
       if (i % 3 === 1) el.classList.add('lvl-2');
@@ -409,7 +415,6 @@
       if (io) io.observe(el);
       else el.classList.add('jujco-show');
     });
-    /* Equalize card heights so "Why Choose Us" + "Contact Information" rows stay symmetric */
     var eqGroups = ['.cs_whychoose_grid', '.cs_contact_cards'];
     function jujcoEqualize() {
       eqGroups.forEach(function (g) {

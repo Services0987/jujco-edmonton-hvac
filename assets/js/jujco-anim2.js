@@ -133,7 +133,7 @@
       });
       /* gentle hover glow replaces the old shatter/font-morph that crumbled */
       t.addEventListener('mouseenter', function () {
-        t.style.textShadow = '0 0 22px rgba(255,85,0,.45)';
+        t.style.textShadow = '0 0 22px rgba(239,27,29,.45)';
         t.style.transition = 'text-shadow .3s ease';
       });
       t.addEventListener('mouseleave', function () {
